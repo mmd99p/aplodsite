@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ادغام کننده آهنگ - ساخت لیست پخش و دانلود</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>🎵 ادغام کننده آهنگ</h1>
+        <p>فایل های صوتی خود را آپلود کنید، به صورت لیست پخش گوش دهید و نسخه ادغام شده را دانلود کنید.</p>
+
+        <div class="upload-section">
+            <input type="file" id="fileInput" accept="audio/*" multiple>
+            <div class="button-group">
+                <button onclick="addToPlaylist()">اضافه به لیست پخش</button>
+                <button onclick="mergeAndDownload()" id="mergeBtn" disabled>ادغام و دانلود</button>
+            </div>
+            <p id="status"></p>
+        </div>
+
+        <div class="playlist-section">
+            <h3>لیست پخش:</h3>
+            <ul id="playlist"></ul>
+            
+            <div class="player-controls">
+                <audio id="audioPlayer" controls></audio>
+                <div>
+                    <button onclick="playNext()">⏭️ بعدی</button>
+                    <button onclick="shufflePlaylist()">🔀 تصادفی</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="download-section" id="downloadSection" style="display: none;">
+            <h3>✅ ادغام完成 شد!</h3>
+            <button onclick="downloadMergedFile()" class="download-btn">⬇️ دانلود فایل ادغام شده</button>
+        </div>
+    </div>
+
+    <script>
+        // متغیرهای全局
+        let uploadedFiles = [];
+        let currentPlayingIndex = -1;
+        let mergedAudioBlob = null;
+
+        // اضافه کردن فایل‌ها به لیست پخش
+        function addToPlaylist() {
+            const fileInput = document.getElementById('fileInput');
+            const statusText = document.getElementById('status');
+            const mergeBtn = document.getElementById('mergeBtn');
+
+            if (fileInput.files.length === 0) {
+                statusText.textContent = "لطفا حداقل یک فایل صوتی انتخاب کنید.";
+                statusText.style.color = "#ff4757";
+                return;
+            }
+
+            // اضافه کردن فایل‌های جدید به لیست
+            for (let i = 0; i < fileInput.files.length; i++) {
+                const file = fileInput.files[i];
+                if (file.type.startsWith('audio/')) {
+                    uploadedFiles.push(file);
+                }
+            }
+
+            if (uploadedFiles.length > 0) {
+                statusText.textContent = `تعداد ${uploadedFiles.length} فایل با موفقیت اضافه شد!`;
+                statusText.style.color = "#4CAF50";
+                mergeBtn.disabled = false;
+                updatePlaylist();
+            } else {
+                statusText.textContent = "هیچ فایل صوتی معتبری انتخاب نشده است.";
+                statusText.style.color = "#ff4757";
+            }
+
+            fileInput.value = '';
+        }
+
+        // به روزرسانی لیست پخش
+        function updatePlaylist() {
+            const playlistElement = document.getElementById('playlist');
+            playlistElement.innerHTML = '';
+
+            uploadedFiles.forEach((file, index) => {
+                const listItem = document.createElement('li');
+                
+                const fileName = document.createElement('span');
+                fileName.textContent = file.name;
+                fileName.style.flex = '1';
+                
+                const removeBtn = document.createElement('button');
+                removeBtn.textContent = 'حذف';
+                removeBtn.className = 'remove-btn';
+                removeBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    removeFromPlaylist(index);
+                };
+
+                listItem.appendChild(fileName);
+                listItem.appendChild(removeBtn);
+                
+                listItem.onclick = () => playSong(index);
+                playlistElement.appendChild(listItem);
+            });
+        }
+
+        // حذف از لیست پخش
+        function removeFromPlaylist(index) {
+            uploadedFiles.splice(index, 1);
+            if (uploadedFiles.length === 0) {
+                document.getElementById('mergeBtn').disabled = true;
+            }
+            updatePlaylist();
+            document.getElementById('status').textContent = 'آیتم از لیست حذف شد.';
+        }
+
+        // پخش آهنگ
+        function playSong(index) {
+            const audioPlayer = document.getElementById('audioPlayer');
+            const file = uploadedFiles[index];
+
+            const objectUrl = URL.createObjectURL(file);
+            audioPlayer.src = objectUrl;
+            audioPlayer.play();
+
+            currentPlayingIndex = index;
+
+            // هایلایت کردن آهنگ در حال پخش
+            const allItems = document.querySelectorAll('#playlist li');
+            allItems.forEach(item => item.classList.remove('playing'));
+            allItems[index].classList.add('playing');
+
+            // پخش خودکار آهنگ بعدی
+            audioPlayer.onended = function() {
+                URL.revokeObjectURL(objectUrl);
+                if (uploadedFiles.length > 0) {
+                    playNext();
+                }
+            };
+        }
+
+        // پخش آهنگ بعدی
+        function playNext() {
+            if (uploadedFiles.length === 0) return;
+            
+            const nextIndex = (currentPlayingIndex + 1) % uploadedFiles.length;
+            playSong(nextIndex);
+        }
+
+        // تصادفی کردن لیست پخش
+        function shufflePlaylist() {
+            for (let i = uploadedFiles.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [uploadedFiles[i], uploadedFiles[j]] = [uploadedFiles[j], uploadedFiles[i]];
+            }
+            updatePlaylist();
+            document.getElementById('status').textContent = 'لیست پخش تصادفی شد!';
+        }
+
+        // ادغام و دانلود
+        async function mergeAndDownload() {
+            const statusText = document.getElementById('status');
+            const mergeBtn = document.getElementById('mergeBtn');
+            
+            if (uploadedFiles.length < 2) {
+                statusText.textContent = "حداقل به 2 فایل برای ادغام نیاز دارید.";
+                statusText.style.color = "#ff4757";
+                return;
+            }
+
+            statusText.textContent = "در حال ادغام فایل‌ها... لطفا منتظر بمانید.";
+            statusText.style.color = "#007bff";
+            mergeBtn.disabled = true;
+
+            try {
+                // ایجاد یک ZIP حاوی تمام فایل‌ها
+                const zip = new JSZip();
+                
+                uploadedFiles.forEach((file, index) => {
+                    zip.file(`track-${index + 1}-${file.name}`, file);
+                });
+
+                // ایجاد فایل ZIP
+                const zipBlob = await zip.generateAsync({
+                    type: "blob",
+                    compression: "DEFLATE"
+                });
+
+                // ذخیره برای دانلود
+                mergedAudioBlob = zipBlob;
+                
+                // نمایش بخش دانلود
+                document.getElementById('downloadSection').style.display = 'block';
+                statusText.textContent = "ادغام完成 شد! حالا می‌توانید فایل را دانلود کنید.";
+                statusText.style.color = "#4CAF50";
+                
+            } catch (error) {
+                console.error('Error merging files:', error);
+                statusText.textContent = "خطا در ادغام فایل‌ها. لطفا دوباره尝试 کنید.";
+                statusText.style.color = "#ff4757";
+                mergeBtn.disabled = false;
+            }
+        }
+
+        // دانلود فایل ادغام شده
+        function downloadMergedFile() {
+            if (!mergedAudioBlob) return;
+            
+            const fileName = `merged-audio-${new Date().toLocaleDateString('fa-IR')}.zip`;
+            saveAs(mergedAudioBlob, fileName);
+        }
+    </script>
+</body>
+</html>

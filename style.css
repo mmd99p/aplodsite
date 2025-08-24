@@ -1,0 +1,167 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    margin: 0;
+    padding: 20px;
+    min-height: 100vh;
+    color: #333;
+}
+
+.container {
+    max-width: 800px;
+    margin: 2rem auto;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 2rem;
+    border-radius: 15px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(10px);
+}
+
+h1 {
+    color: #4CAF50;
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.upload-section {
+    margin: 2rem 0;
+    padding: 1.5rem;
+    border: 2px dashed #4CAF50;
+    border-radius: 10px;
+    background: #f8fff8;
+}
+
+.button-group {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin: 1rem 0;
+    flex-wrap: wrap;
+}
+
+button {
+    background: linear-gradient(45deg, #4CAF50, #45a049);
+    color: white;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+button:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.download-btn {
+    background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+    font-size: 1.1em;
+    padding: 15px 30px;
+}
+
+.playlist-section {
+    margin: 2rem 0;
+    padding: 1.5rem;
+    background: #f8f9fa;
+    border-radius: 10px;
+}
+
+.player-controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+#audioPlayer {
+    flex: 1;
+    min-width: 250px;
+}
+
+#playlist {
+    list-style: none;
+    padding: 0;
+    margin: 1rem 0;
+}
+
+#playlist li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    background: white;
+    margin-bottom: 8px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+#playlist li:hover {
+    transform: translateX(5px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+#playlist li.playing {
+    background: linear-gradient(45deg, #4CAF50, #45a049);
+    color: white;
+    font-weight: bold;
+}
+
+.remove-btn {
+    background: #ff4757;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 15px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.download-section {
+    text-align: center;
+    padding: 2rem;
+    background: linear-gradient(45deg, #4ecdc4, #44a08d);
+    border-radius: 10px;
+    color: white;
+    margin-top: 2rem;
+    animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+#status {
+    text-align: center;
+    font-weight: bold;
+    color: #666;
+    margin: 1rem 0;
+}
+
+@media (max-width: 600px) {
+    .container {
+        margin: 1rem;
+        padding: 1rem;
+    }
+    
+    .button-group {
+        flex-direction: column;
+    }
+    
+    .player-controls {
+        flex-direction: column;
+    }
+}
