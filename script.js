@@ -3,6 +3,9 @@ let currentPlayingIndex = -1;
 let mergedAudioBlob = null;
 let downloadLink = '';
 
+// کلید API رایگان ImgBB (می‌توانید خودتان ثبت نام کنید)
+const IMGBB_API_KEY = 'your_api_key_here';
+
 function addToPlaylist() {
     const fileInput = document.getElementById('fileInput');
     const statusText = document.getElementById('status');
@@ -147,13 +150,13 @@ async function mergeAndDownload() {
         const wavBlob = audioBufferToWav(outputBuffer);
         mergedAudioBlob = new Blob([wavBlob], { type: 'audio/wav' });
 
-        statusText.textContent = 'در حال ایجاد لینک دائمی...';
+        statusText.textContent = 'در حال آپلود فایل و ایجاد لینک دائمی...';
         
-        // ایجاد لینک دائمی با استفاده از GitHub Gist
-        downloadLink = await createPermanentLink(mergedAudioBlob);
+        // آپلود به ImgBB برای ایجاد لینک دائمی
+        downloadLink = await uploadToImgBB(mergedAudioBlob);
         
         document.getElementById('downloadSection').style.display = 'block';
-        statusText.textContent = 'ادغام با موفقیت انجام شد! لینک دائمی ایجاد شد.';
+        statusText.textContent = 'فایل با موفقیت آپلود شد! لینک دائمی ایجاد شد.';
         statusText.style.color = '#4CAF50';
 
         createDownloadLink();
@@ -162,54 +165,32 @@ async function mergeAndDownload() {
         console.error('Error:', error);
         statusText.textContent = 'خطا در پردازش فایل ها. لطفا دوباره سعی کنید.';
         statusText.style.color = '#ff4757';
+        
+        // Fallback: ایجاد لینک موقت
+        const objectUrl = URL.createObjectURL(mergedAudioBlob);
+        downloadLink = objectUrl;
+        createDownloadLink();
     } finally {
         mergeBtn.disabled = false;
     }
 }
 
-// تابع برای ایجاد لینک دائمی با GitHub Gist
-async function createPermanentLink(blob) {
-    // تبدیل blob به base64
-    const base64Audio = await blobToBase64(blob);
+// تابع برای آپلود به ImgBB
+async function uploadToImgBB(blob) {
+    const formData = new FormData();
+    formData.append('image', blob, 'merged-audio.wav');
     
-    // ایجاد یک gist با فایل صوتی
-    const gistData = {
-        description: "ادغام شده آهنگ ها - ایجاد شده توسط وب اپلیکیشن",
-        public: true,
-        files: {
-            "merged-audio.wav": {
-                content: base64Audio.split(',')[1] // حذف data:audio/wav;base64,
-            }
-        }
-    };
-
-    const response = await fetch('https://api.github.com/gists', {
+    const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
         method: 'POST',
-        headers: {
-            'Accept': 'application/vnd.github.v3+json',
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(gistData)
+        body: formData
     });
-
-    if (!response.ok) {
-        throw new Error('خطا در ایجاد لینک دائمی');
-    }
-
-    const gist = await response.json();
     
-    // ایجاد لینک دانلود مستقیم
-    return `https://gist.github.com/${gist.owner.login}/${gist.id}/raw/merged-audio.wav`;
-}
-
-// تبدیل blob به base64
-function blobToBase64(blob) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result);
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-    });
+    if (!response.ok) {
+        throw new Error('آپلود失敗 شد');
+    }
+    
+    const data = await response.json();
+    return data.data.url; // لینک دائمی
 }
 
 function createDownloadLink() {
@@ -219,7 +200,7 @@ function createDownloadLink() {
     downloadSection.innerHTML = '';
     
     const title = document.createElement('h3');
-    title.textContent = '✅ لینک دائمی دانلود آماده است!';
+    title.textContent = '✅ لینک دائمی آماده است!';
     title.style.color = 'white';
     title.style.marginBottom = '1rem';
     
